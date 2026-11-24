@@ -1,5 +1,10 @@
 name: Browser smoke test live simple-ime
 on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'topik-vocab/**'
+      - '.github/workflows/ime-browser-test.yml'
   workflow_dispatch:
   push:
     branches: [gh-pages]

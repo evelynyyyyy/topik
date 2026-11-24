@@ -7,10 +7,6 @@
  window.TOPIK_ASSET_VERSION=release.assetVersion;
  let checking=false,lastCheck=-Infinity,pending=null,updating=false;
  const bannerId='topik-release-notice';
- function showUpdate(next){
-  pending=next;
-  renderNotice();
- }
  function renderNotice(){
   document.body.classList.toggle('topik-update-available',!!pending);
   const slot=document.getElementById('topik-release-slot');if(!slot)return;
@@ -29,14 +25,14 @@
     try{
      if(window.TOPIK_SAVE_SESSION?.()!==true)throw Error('save failed');
      const pool=window.TOPIK_ACTIVE_SMART_POOL?.();
-     const storage=window.TOPIK_SESSION_STORAGE||sessionStorage;
+     const storage=window.TOPIK_SESSION_STORAGE;
      if(pool)storage.setItem('topik:resume-after-update',pool);
      else storage.removeItem('topik:resume-after-update');
      const url=new URL(location.href);url.searchParams.set('release',pending.buildSha);
      url.searchParams.set('refresh',String(Date.now()));
      if(window.TOPIK_SHARE_SPACE?.prepareUpdate?.(url.href)!==true)throw Error('space continuation failed');
      location.replace(url.href);
-    }catch(err){updating=false;button.disabled=false;label.textContent='更新前保存失败，请重试（当前学习未中断）';}
+    }catch(err){console.warn('TOPIK update preparation failed',err);updating=false;button.disabled=false;label.textContent='更新前保存失败，请重试（当前学习未中断）';}
    };
    banner.append(label,button,later);slot.append(banner);
   }
@@ -53,7 +49,7 @@
    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
    let response,remote;try{response=await fetch(url.href,{cache:'no-store',headers:{'Cache-Control':'no-cache'},signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);remote=await response.json()}finally{clearTimeout(timeout)}
    if(!remote||typeof remote.version!=='string'||!/^[a-f0-9]{40}$/.test(remote.buildSha||''))throw Error('invalid release manifest');
-   if(remote.buildSha!==release.buildSha){if(release.buildTime&&remote.buildTime&&Date.parse(remote.buildTime)<Date.parse(release.buildTime))return false;showUpdate(remote);return true}
+   if(remote.buildSha!==release.buildSha){if(release.buildTime&&remote.buildTime&&Date.parse(remote.buildTime)<Date.parse(release.buildTime))return false;pending=remote;renderNotice();return true}
    pending=null;renderNotice();return false;
   }catch(err){return null}
   finally{checking=false}

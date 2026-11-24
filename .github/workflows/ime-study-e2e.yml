@@ -1,5 +1,10 @@
 name: Study page simple-ime E2E
 on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'topik-vocab/**'
+      - '.github/workflows/ime-study-e2e.yml'
   workflow_dispatch:
   push:
     branches: [gh-pages]

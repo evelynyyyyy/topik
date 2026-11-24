@@ -21,6 +21,7 @@ jobs:
           node-version: '22'
       - name: Verify JavaScript syntax
         run: |
+          node --check topik-vocab/release-client.js
           node --check topik-vocab/share-space.js
           node --check topik-vocab/theme.js
           node --check topik-vocab/pinyin-keyboard.js
@@ -60,6 +61,7 @@ jobs:
           node topik-vocab/tests/reset-progress.test.cjs
           node topik-vocab/tests/vocabulary-expansion.test.cjs
           node topik-vocab/tests/lexicon-quality.test.cjs
+          for test in topik-vocab/tests/*.test.cjs; do node "$test"; done
       - name: Verify permanent URL and portable learning backups
         run: |
           node - <<'NODE'
