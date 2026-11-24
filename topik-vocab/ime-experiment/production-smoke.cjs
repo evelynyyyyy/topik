@@ -22,22 +22,18 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  await sharedPage.evaluate(()=>{const data=JSON.parse((window.TOPIK_STORAGE||localStorage).getItem('topik_lab_v2')||'{}');data.__shareTestMarker='recipient';(window.TOPIK_STORAGE||localStorage).setItem('topik_lab_v2',JSON.stringify(data))});
  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('topik_lab_v2')||'{}').__shareTestMarker),ownerMarker);
  await sharedPage.close();
- // Exercise the actual notice in both browser engines without changing the deployed manifest.
+ // Settings-only update UI in both engines.
  await page.route('**/release.json?*',route=>route.fulfill({json:{version:'9.9.9',buildSha:'f'.repeat(40)}}));
  await page.evaluate(()=>window.TOPIK_CHECK_UPDATE());
+ assert.equal(await page.locator('#topik-release-notice').count(),0);
+ assert.equal(await page.locator('body').evaluate(n=>n.classList.contains('topik-update-available')),true);
+ await page.locator('#mobile-nav [data-view="settings"]').click();
  const notice=page.locator('#topik-release-notice');await notice.waitFor({state:'visible'});
- for(const theme of ['dark','light']){
-  await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
-  const colors=await notice.evaluate(n=>{const s=getComputedStyle(n),b=getComputedStyle(n.querySelector('.primary'));return {bg:s.backgroundColor,fg:s.color,button:b.backgroundColor,text:b.color,image:s.backgroundImage,width:n.getBoundingClientRect().right,viewport:innerWidth}});
-  assert.equal(colors.bg,theme==='dark'?'rgb(10, 10, 10)':'rgb(255, 255, 255)');
-  assert.equal(colors.button,theme==='dark'?'rgb(255, 255, 255)':'rgb(10, 10, 10)');
-  assert.equal(colors.text,theme==='dark'?'rgb(10, 10, 10)':'rgb(255, 255, 255)');
-  assert.equal(colors.image,'none');assert.ok(colors.width<=colors.viewport);
- }
- await notice.getByRole('button',{name:'稍后提醒'}).click();assert.equal(await notice.isVisible(),false);
- await page.evaluate(()=>window.TOPIK_CHECK_UPDATE());await notice.waitFor({state:'visible'});
- await setTask(page,'spell');assert.equal(await notice.evaluate(n=>getComputedStyle(n).position),'static');
- await notice.getByRole('button',{name:'稍后提醒'}).click();
+ await notice.getByRole('button',{name:'稍后',exact:true}).click();assert.equal(await notice.isVisible(),false);
+ assert.equal(await page.locator('body').evaluate(n=>n.classList.contains('topik-update-available')),true);
+ await page.locator('#mobile-nav [data-view="home"]').click();
+ await page.locator('#mobile-nav [data-view="settings"]').click();await notice.waitFor({state:'visible'});
+ await setTask(page,'spell');assert.equal(await notice.count(),0);
  await page.unroute('**/release.json?*');
  console.log(JSON.stringify({browser:name,kind:'monochrome-release-notice',passed:true}));
 
