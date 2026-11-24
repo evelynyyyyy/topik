@@ -5,17 +5,18 @@ const built=[
 const detail={
 "학교":["학교에 가요.","去学校。",""],"학생":["저는 학생이에요.","我是学生。",""],"선생님":["선생님이 오셨어요.","老师来了。",""],"친구":["친구를 만나요.","见朋友。",""],"책":["책을 읽어요.","读书。",""],"물":["물을 마셔요.","喝水。",""],"밥":["밥을 먹어요.","吃饭。",""],"집":["집에 있어요.","在家。",""],"오늘":["오늘 공부해요.","今天学习。",""],"내일":["내일 만나요.","明天见。",""],"사람":["사람이 많아요.","人很多。",""],"한국어":["한국어를 공부해요.","学习韩语。",""],"시험":["시험을 준비해요.","准备考试。",""],"대학":["대학에 다녀요.","上大学。",""],"운동":["매일 운동해요.","每天运动。",""],"여행":["한국으로 여행을 가요.","去韩国旅行。",""],"문제":["문제를 풀어요.","解题。",""],"건강":["건강이 중요해요.","健康很重要。",""],"경험":["좋은 경험이었어요.","是很好的经历。",""],"환경":["환경을 보호해요.","保护环境。",""],"발전":["기술이 발전해요.","技术在发展。",""],"학교":["학교에 가요.","去学校。","[학꾜]"],"학생":["저는 학생이에요.","我是学生。","[학쌩]"],"한국어":["한국어를 공부해요.","学习韩语。","[한구거]"]
 };
-// Global local-first invariant: the public URL contains no profile data; each browser owns its own learning state.
-// Never load learning state from URL/query/hash or shared remote storage. Backup import requires explicit file selection.
+// Global local-first invariant: share URLs contain only an opaque space token, never profile data.
+// The default profile keeps the original storage keys; a received share token uses an isolated browser-local namespace.
+const appStorage=window.TOPIK_STORAGE||localStorage;
 const STORAGE='topik_lab_v2';
 const today=()=>new Date().toLocaleDateString('sv-SE');
-const parse=(key,otherwise)=>{try{return JSON.parse(localStorage.getItem(key))??otherwise}catch{return otherwise}};
+const parse=(key,otherwise)=>{try{return JSON.parse(appStorage.getItem(key))??otherwise}catch{return otherwise}};
 const state=parse(STORAGE,{});
 state.progress=state.progress||{};state.lifecycle=state.lifecycle||{};state.dailyGoal=Math.max(0,Math.min(200,Number(state.dailyGoal??20)));state.smartHistory=state.smartHistory||[];state.smartAnswerHistory=state.smartAnswerHistory||[];state.relearn=state.relearn||{};state.favorites=state.favorites||[];state.daily=state.daily||{};delete state.goal;state.theme=window.TOPIK_THEME.getMode();state.level=Number(state.level)||1;state.collection=state.collection||'topik';state.inputMethod=state.inputMethod==='system'?'system':'bilingual';state.webChineseAutoFocus=state.webChineseAutoFocus===true;state.extra=Array.isArray(state.extra)?state.extra:parse('topik_extra',[]);
 let legacy=parse('topik_records',{});
 if(!state.legacyMigrated){Object.entries(legacy).forEach(([ko,r])=>{if(!state.progress[ko])state.progress[ko]={read:{step:Number(r.step)||0,due:Number(r.due)||0,wrong:0}}});state.legacyMigrated=true;}
 let pinyinComposition='',pinyinPage=0;let hangulShift=false,pinyinShift=false,pinyinMode='letters',pinyinExpanded=false;let keyboardDeleteTimer=null,keyboardDeleteInterval=null;let pendingRating=false;let view='home',session=null,practiceReturn=null,onboarding=null,smartTask=null,listQuery='',listFilter='all',feedback='',typed='',didCheck=false,smartResult=null,toastTimer,relearnSelection=new Set(),reviewDiagnosticVisible=false;
-function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch{notify('保存失败：浏览器存储空间不足或不可用')}}
+function persist(){try{appStorage.setItem(STORAGE,JSON.stringify(state))}catch{notify('保存失败：浏览器存储空间不足或不可用')}}
 const REVIEW_MIGRATION_BACKUP='topik_lab_v2_review_migration_v2_backup';
 let reviewMigrationBoot={needed:false,backupCreated:false,blocked:false};
 function migrateReviewStorage(){
@@ -23,8 +24,8 @@ function migrateReviewStorage(){
  if(!plan.needed)return;
  if(plan.roundCount){
   try{
-   if(localStorage.getItem(REVIEW_MIGRATION_BACKUP)===null){
-    localStorage.setItem(REVIEW_MIGRATION_BACKUP,JSON.stringify({version:2,createdAt:Date.now(),state:JSON.parse(JSON.stringify(state))}));
+   if(appStorage.getItem(REVIEW_MIGRATION_BACKUP)===null){
+    appStorage.setItem(REVIEW_MIGRATION_BACKUP,JSON.stringify({version:2,createdAt:Date.now(),state:JSON.parse(JSON.stringify(state))}));
     reviewMigrationBoot.backupCreated=true;
    }
   }catch(err){reviewMigrationBoot.blocked=true;reviewMigrationBoot.error=String(err?.message||err);return}
@@ -33,7 +34,7 @@ function migrateReviewStorage(){
  reviewMigrationBoot={...reviewMigrationBoot,...report};persist();
 }
 // First visit creates an empty browser-local profile; existing profiles are never reset by opening or sharing the URL.
-try{if(localStorage.getItem(STORAGE)===null)persist()}catch(_){}
+try{if(appStorage.getItem(STORAGE)===null)persist()}catch(_){}
 migrateReviewStorage();
 function all(){let seen=new Set();return built.concat(window.TOPIK_EXTRA_WORDS||[],window.TOPIK_YONSEI_WORDS||[],window.TOPIK_VERIFIED_ADDITIONS||[],state.extra).filter(w=>{if(!w||!w[1]||seen.has(w[1]))return false;seen.add(w[1]);return true})}
 const TOPIK_TOPICS={
@@ -577,7 +578,7 @@ function reviewDiagnostic(){
    koToZhPassed:!!rs?.koToZhPassed,zhToKoPassed:!!rs?.zhToKoPassed,belongsToCurrentRound:belongs,completed,queueReason};
  });
  let storage={key:STORAGE,readable:false,parseable:false,migrationBackupAvailable:false};
- try{const raw=localStorage.getItem(STORAGE);storage.readable=raw!==null;if(raw!==null){JSON.parse(raw);storage.parseable=true}storage.migrationBackupAvailable=localStorage.getItem(REVIEW_MIGRATION_BACKUP)!==null}catch(err){storage.error=String(err?.message||err)}
+ try{const raw=appStorage.getItem(STORAGE);storage.readable=raw!==null;if(raw!==null){JSON.parse(raw);storage.parseable=true}storage.migrationBackupAvailable=appStorage.getItem(REVIEW_MIGRATION_BACKUP)!==null}catch(err){storage.error=String(err?.message||err)}
  const reviewDue=active?queueIds.length:rawDue.length;
  return {appVersion:window.TOPIK_APP_VERSION||null,buildSha:window.TOPIK_BUILD||null,assetVersion:window.TOPIK_ASSET_VERSION||null,dataStructureVersion:Number(state.reviewDataVersion||0),
   storage,localDate:today(),timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||null,generatedAt:new Date(now).toISOString(),
@@ -590,12 +591,12 @@ function reviewDiagnostic(){
 }
 window.TOPIK_REVIEW_DIAGNOSTIC=reviewDiagnostic;
 function reviewDiagnosticPanel(){
- const backup=(()=>{try{return localStorage.getItem(REVIEW_MIGRATION_BACKUP)!==null}catch{return false}})();
+ const backup=(()=>{try{return appStorage.getItem(REVIEW_MIGRATION_BACKUP)!==null}catch{return false}})();
  const output=reviewDiagnosticVisible?'<pre class="review-diagnostic-output">'+quote(JSON.stringify(reviewDiagnostic(),null,2))+'</pre>':'';
  return '<section class="settings-group"><h3>复习诊断（只读）</h3><p class="small muted">仅在明确点击后生成当前等级、当前复习轮次与实际到期词的诊断；不会上传，也不会修改学习记录。</p><div class="reset-actions"><button class="line-btn" id="show-review-diagnostic">'+(reviewDiagnosticVisible?'刷新诊断':'生成诊断')+'</button><button class="line-btn" id="export-review-diagnostic">导出诊断 JSON</button>'+(backup?'<button class="line-btn" id="export-review-migration-backup">导出迁移前完整备份</button>':'')+'</div>'+output+'</section>';
 }
 function exportReviewMigrationBackup(){
- try{const raw=localStorage.getItem(REVIEW_MIGRATION_BACKUP);if(!raw){notify('没有可导出的迁移前备份');return}download('topik-review-migration-backup.json',raw,'application/json')}catch(err){notify('备份读取失败：'+String(err?.message||err))}
+ try{const raw=appStorage.getItem(REVIEW_MIGRATION_BACKUP);if(!raw){notify('没有可导出的迁移前备份');return}download('topik-review-migration-backup.json',raw,'application/json')}catch(err){notify('备份读取失败：'+String(err?.message||err))}
 }
 function settings(){return '<div class="eyebrow">个性化</div><h1>设置</h1><p class="tiny muted">Version v'+window.TOPIK_APP_VERSION+' · Build '+(window.TOPIK_BUILD||'加载中')+'</p><button type="button" class="secondary" id="check-app-update">检查更新</button><section class="settings-group"><h3>学习安排</h3><div class="setting-row"><div><b>每日新词目标</b><p>目标不是固定批次；设为 0 可只复习旧词</p></div><input class="field" id="daily-goal" type="number" min="0" max="200" step="1" style="width:90px" value="'+state.dailyGoal+'"></div></section><section class="settings-group"><h3>输入方式</h3><div class="setting-row"><div><b>双语网页键盘（默认）</b><p>根据当前题目自动切换韩语两套式键盘与中文拼音候选键盘，不调用系统键盘。</p></div><select class="select" id="input-method"><option value="bilingual" '+(state.inputMethod==='bilingual'?'selected':'')+'>双语网页键盘</option><option value="system" '+(state.inputMethod==='system'?'selected':'')+'>高级：系统键盘兼容模式</option></select></div><div class="setting-row"><div><b>学习调试信息（临时）</b><p>仅启用时在智能学习页显示双向到期数量，并在开发者控制台输出每题选择原因。不会更改学习记录。</p></div><label><input type="checkbox" id="study-debug" '+(state.studyDebug?'checked':'')+'> 开启</label></div></section><section class="settings-group"><h3>音效</h3><div class="setting-row"><div><b>界面音效</b><p>键盘、按钮和答题反馈；不影响韩语发音。</p></div><select class="select" id="sound-mode"><option value="off" '+((state.soundMode||'light')==='off'?'selected':'')+'>关闭</option><option value="light" '+((state.soundMode||'light')==='light'?'selected':'')+'>轻（默认）</option><option value="standard" '+((state.soundMode||'light')==='standard'?'selected':'')+'>标准</option></select></div></section><section class="settings-group"><h3>显示偏好</h3><div class="setting-row"><div><b>外观</b><p>与系统同步或手动选择模式</p></div><select class="select" id="theme-choice"><option value="system" '+(state.theme==='system'?'selected':'')+'>跟随系统</option><option value="light" '+(state.theme==='light'?'selected':'')+'>浅色</option><option value="dark" '+(state.theme==='dark'?'selected':'')+'>深色</option></select></div></section><section class="settings-group"><h3>关于词库</h3><div class="setting-row"><div><b>词条与分组</b><p>当前收录 '+all().length.toLocaleString('zh-CN')+' 个去重韩语词形；TOPIK 1～6 为教学难度分组，并非官方 TOPIK 分级词表。</p></div></div><div class="setting-row"><div><b>数据来源与质量</b><p>词库包含未经逐条人工审校的开源内容。请参考来源说明了解扩充方式与质量限制。</p></div></div><div class="setting-row"><div><b>来源、许可与质量说明</b><p><a href="./DATA-LICENSE.md" target="_blank" rel="noopener noreferrer">查看数据来源及开源许可</a> · <a href="./VOCAB-SOURCES.md" target="_blank" rel="noopener noreferrer">扩充来源与质量说明</a></p></div></div></section><section class="settings-group"><h3>学习数据</h3><p class="small muted">学习记录保存在当前浏览器，尚不支持跨设备云端同步。建议定期导出 JSON 备份。</p></section>'+reviewDiagnosticPanel()+'<section class="settings-group"><h3>词库导入与备份</h3><div class="setting-row"><div><b>导入 CSV 词汇</b><p>支持 level,ko,zh,example,translation,reading 六列；可含逗号的字段需加引号</p></div><label class="line-btn" style="cursor:pointer">选择文件<input id="csv-upload" type="file" accept=".csv,text/csv" class="hidden"></label></div><div class="setting-row"><div><b>导出词库</b><p>下载包含自定义词汇的完整列表</p></div><button class="line-btn" id="export-csv">导出 CSV</button></div><div class="setting-row"><div><b>学习进度备份</b><p>JSON 包含学习记录、收藏、自定义词汇及偏好</p></div><button class="line-btn" id="export-data">导出备份</button></div><div class="setting-row"><div><b>恢复学习记录</b><p>从备份恢复会覆盖当前浏览器的学习进度</p></div><label class="line-btn" style="cursor:pointer">导入备份<input id="backup-upload" type="file" accept=".json,application/json" class="hidden"></label></div></section><section class="settings-group reset-panel"><h3>学习数据管理</h3><p class="muted small">清空后单词重新变为未学习状态。建议先导出 JSON 备份；不会删除词库、发音、例句或外观设置。</p><button class="line-btn" id="reset-backup">先导出学习记录</button><div class="reset-actions"><button class="secondary" data-reset-scope="level">清空当前 TOPIK '+state.level+' 等级</button><button class="secondary reset-danger" data-reset-scope="all">清空全部学习记录</button></div></section><div class="notice">每日新词数量是可调整的目标，不是强制学习轮次；完成新词目标后仍可继续复习。词库按教学难度分组，并非 TOPIK 官方完整分级词表。请定期导出备份；本版本尚不支持跨设备云端同步。</div>'}
 function resetLearning(scope){

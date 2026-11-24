@@ -11,6 +11,17 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  const start=Date.now();await page.goto(url,{waitUntil:'load',timeout:60000});
  assert.equal(await page.evaluate(()=>window.CHINESE_IME_ENGINE),'simple-ime');
  assert.equal(await page.locator('script[src*="simple-ime-core"]').count(),0,'engine should be lazy');
+ const sharedUrl=page.url(),shareToken=new URL(sharedUrl).searchParams.get('share');
+ assert.match(shareToken||'',/^[A-Za-z0-9_-]{16,64}$/);
+ const ownerMarker='owner-'+name;
+ await page.evaluate(marker=>{const data=JSON.parse(localStorage.getItem('topik_lab_v2')||'{}');data.__shareTestMarker=marker;localStorage.setItem('topik_lab_v2',JSON.stringify(data))},ownerMarker);
+ const sharedPage=await page.context().newPage();
+ await sharedPage.goto(sharedUrl,{waitUntil:'load',timeout:60000});
+ const isolated=await sharedPage.evaluate(()=>({scope:window.TOPIK_SHARE_SPACE?.activeScope||null,token:new URL(location.href).searchParams.get('share'),owner:JSON.parse(localStorage.getItem('topik_lab_v2')||'{}').__shareTestMarker||null,shared:JSON.parse((window.TOPIK_STORAGE||localStorage).getItem('topik_lab_v2')||'{}').__shareTestMarker||null}));
+ assert.equal(isolated.scope,shareToken);assert.equal(isolated.token,shareToken);assert.equal(isolated.owner,ownerMarker);assert.equal(isolated.shared,null);
+ await sharedPage.evaluate(()=>{const data=JSON.parse((window.TOPIK_STORAGE||localStorage).getItem('topik_lab_v2')||'{}');data.__shareTestMarker='recipient';(window.TOPIK_STORAGE||localStorage).setItem('topik_lab_v2',JSON.stringify(data))});
+ assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('topik_lab_v2')||'{}').__shareTestMarker),ownerMarker);
+ await sharedPage.close();
  await setTask(page,'meaning');
  await page.waitForFunction(()=>typeof simpleIme!=='undefined'&&!!simpleIme,{timeout:30000});
  const lazyMs=Date.now()-start;
@@ -30,11 +41,11 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  const dao=await page.evaluate(()=>simpleIme.getCandidates());assert.ok(dao.includes('到'));
  await page.locator('[data-pinyin-choice="'+dao.indexOf('到')+'"]').click();
  await page.locator('[data-pinyin-mode="numbers"]').click();
- await page.locator('[data-pinyin-symbol="'+encodeURIComponent('（')+'"]').click();
+ await page.locator('[data-pinyin-symbol="'+encodeURIComponent('（')+'"]:visible').click();
  await page.locator('[data-pinyin-mode="letters"]').click();
  await typeChinese(page,'shijian');const timeChoices=await page.evaluate(()=>simpleIme.getCandidates());assert.ok(timeChoices.includes('时间'));await page.locator('[data-pinyin-choice="'+timeChoices.indexOf('时间')+'"]').click();
  await page.locator('[data-pinyin-mode="numbers"]').click();
- await page.locator('[data-pinyin-symbol="'+encodeURIComponent('）')+'"]').click();
+ await page.locator('[data-pinyin-symbol="'+encodeURIComponent('）')+'"]:visible').click();
  assert.equal(await page.locator('#spell-input').inputValue(),'到（时间）');
  await page.locator('[data-pinyin-key="backspace"]:visible').click();
  assert.equal(await page.locator('#spell-input').inputValue(),'到（时间');
@@ -55,7 +66,7 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  ['과','ㄱㅗㅏ'],['뭐','ㅁㅜㅓ'],['의','ㅇㅡㅣ']
  ];
  for(const [expected,keys] of samples){await setTask(page,'spell');await typeKorean(page,[...keys]);assert.equal(await page.locator('#spell-input').inputValue(),expected)}
- await setTask(page,'meaning');await typeChinese(page,'xuesheng');const student=await page.evaluate(()=>simpleIme.getCandidates());await page.locator('[data-pinyin-choice="'+student.indexOf('学生')+'"]').click();await page.locator('[data-pinyin-mode="numbers"]').click();await page.locator('[data-pinyin-symbol="'+encodeURIComponent('、')+'"]').click();await page.locator('[data-pinyin-mode="letters"]').click();await typeChinese(page,'laoshi');const teacher=await page.evaluate(()=>simpleIme.getCandidates());assert.ok(teacher.includes('老师'));await page.locator('[data-pinyin-choice="'+teacher.indexOf('老师')+'"]').click();assert.equal(await page.locator('#spell-input').inputValue(),'学生、老师');
+ await setTask(page,'meaning');await typeChinese(page,'xuesheng');const student=await page.evaluate(()=>simpleIme.getCandidates());await page.locator('[data-pinyin-choice="'+student.indexOf('学生')+'"]').click();await page.locator('[data-pinyin-mode="numbers"]').click();await page.locator('[data-pinyin-symbol="'+encodeURIComponent('、')+'"]:visible').click();await page.locator('[data-pinyin-mode="letters"]').click();await typeChinese(page,'laoshi');const teacher=await page.evaluate(()=>simpleIme.getCandidates());assert.ok(teacher.includes('老师'));await page.locator('[data-pinyin-choice="'+teacher.indexOf('老师')+'"]').click();assert.equal(await page.locator('#spell-input').inputValue(),'学生、老师');
  for(const [base,expected] of [['ㄱ','ㄲ'],['ㄷ','ㄸ'],['ㅂ','ㅃ'],['ㅅ','ㅆ'],['ㅈ','ㅉ']]){await setTask(page,'spell');await page.locator('[data-hangul-shift]').click();await page.locator('[data-hangul="'+base+'"]').click();assert.equal(await page.locator('#spell-input').inputValue(),expected)}
  await setTask(page,'spell');await page.locator('[data-hangul-shift]').click();
  assert.equal(await page.locator('[data-hangul-shift]').getAttribute('aria-pressed'),'true');
