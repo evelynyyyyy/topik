@@ -11,13 +11,15 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  const start=Date.now();await page.goto(url,{waitUntil:'load',timeout:60000});
  assert.equal(await page.evaluate(()=>window.CHINESE_IME_ENGINE),'simple-ime');
  assert.equal(await page.locator('script[src*="simple-ime-core"]').count(),0,'engine should be lazy');
- const sharedUrl=page.url(),shareToken=new URL(sharedUrl).searchParams.get('share');
+ assert.equal(new URL(page.url()).searchParams.has('share'),false);assert.equal(new URL(page.url()).searchParams.has('space'),false);
+ const sharedUrl=await page.evaluate(()=>window.TOPIK_SHARE_SPACE.freshShareUrl()),shareToken=new URL(sharedUrl).searchParams.get('space');
  assert.match(shareToken||'',/^[A-Za-z0-9_-]{16,64}$/);
  const ownerMarker='owner-'+name;
  await page.evaluate(marker=>{const data=JSON.parse(localStorage.getItem('topik_lab_v2')||'{}');data.__shareTestMarker=marker;localStorage.setItem('topik_lab_v2',JSON.stringify(data))},ownerMarker);
+ const shortcut=await context.newPage();await shortcut.goto(url,{waitUntil:'load'});assert.equal(await shortcut.evaluate(()=>window.TOPIK_SHARE_SPACE.activeScope),'default');assert.equal(await shortcut.evaluate(()=>JSON.parse(window.TOPIK_STORAGE.getItem('topik_lab_v2')).__shareTestMarker),ownerMarker);await shortcut.close();
  const sharedPage=await context.newPage();
  await sharedPage.goto(sharedUrl,{waitUntil:'load',timeout:60000});
- const isolated=await sharedPage.evaluate(()=>({scope:window.TOPIK_SHARE_SPACE?.activeScope||null,token:new URL(location.href).searchParams.get('share'),owner:JSON.parse(localStorage.getItem('topik_lab_v2')||'{}').__shareTestMarker||null,shared:JSON.parse((window.TOPIK_STORAGE||localStorage).getItem('topik_lab_v2')||'{}').__shareTestMarker||null}));
+ const isolated=await sharedPage.evaluate(()=>({scope:window.TOPIK_SHARE_SPACE?.activeScope||null,token:new URL(location.href).searchParams.get('space'),owner:JSON.parse(localStorage.getItem('topik_lab_v2')||'{}').__shareTestMarker||null,shared:JSON.parse((window.TOPIK_STORAGE||localStorage).getItem('topik_lab_v2')||'{}').__shareTestMarker||null}));
  assert.equal(isolated.scope,shareToken);assert.equal(isolated.token,shareToken);assert.equal(isolated.owner,ownerMarker);assert.equal(isolated.shared,null);
  await sharedPage.evaluate(()=>{const data=JSON.parse((window.TOPIK_STORAGE||localStorage).getItem('topik_lab_v2')||'{}');data.__shareTestMarker='recipient';(window.TOPIK_STORAGE||localStorage).setItem('topik_lab_v2',JSON.stringify(data))});
  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('topik_lab_v2')||'{}').__shareTestMarker),ownerMarker);
