@@ -162,7 +162,7 @@ function saveSmartSession(){
  };
  persist();
 }
-window.TOPIK_SAVE_SESSION=saveSmartSession;
+window.TOPIK_SAVE_SESSION=()=>{saveSmartSession();appStorage.setItem(STORAGE,JSON.stringify(state));return true};
 window.TOPIK_ACTIVE_SMART_POOL=()=>view==='smart'?smartPool:null;
 function restoreSmartSession(pool){
  const snap=state.smartSessions?.[pool];
