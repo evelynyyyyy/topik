@@ -50,7 +50,7 @@
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)void check()});
  document.addEventListener('DOMContentLoaded',()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.getRegistrations().then(regs=>{
-   regs.filter(reg=>reg.scope.includes('/study-abroad/topik-vocab/')).forEach(reg=>reg.unregister());
+   regs.filter(reg=>new URL(reg.scope).pathname===new URL('.',location.href).pathname).forEach(reg=>reg.unregister());
   }).catch(()=>{});
   // No deletion of Cache Storage, localStorage, IndexedDB, or learning data.
   void check();
