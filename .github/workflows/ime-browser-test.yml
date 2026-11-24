@@ -6,6 +6,10 @@ on:
     paths:
       - '.github/workflows/ime-browser-test.yml'
       - 'topik-vocab/ime-experiment/browser-smoke.cjs'
+      - 'topik-vocab/app.js'
+      - 'topik-vocab/share-space.js'
+      - 'topik-vocab/release-client.js'
+      - 'topik-vocab/index.html'
 permissions:
   contents: read
 jobs:
