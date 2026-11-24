@@ -21,12 +21,16 @@ assert.equal(owner.activeScope,'default');
 assert.equal(new URL(owner.url).searchParams.get('share'),token);
 assert.equal(API.createStorage(ownerStorage,owner.activeScope).getItem('topik_lab_v2'),ownerStorage.getItem('topik_lab_v2'));
 
-const reload=API.resolve(owner.url,owner.historyState,owner.sessionMarker,()=>next);
+const reload=API.resolve(owner.url,owner.historyState,null,()=>next);
 assert.equal(reload.activeScope,'default','same history entry reload must keep the owner profile');
 
 const updateUrl=new URL(owner.url);updateUrl.searchParams.set('release','build-sha');
-const afterUpdate=API.resolve(updateUrl.href,null,owner.sessionMarker,()=>next);
-assert.equal(afterUpdate.activeScope,'default','release navigation must keep the active owner profile');
+const continuation=API.makeContinuation(owner.activeScope,owner.shareToken,updateUrl.href);
+assert.ok(continuation);
+const afterUpdate=API.resolve(updateUrl.href,null,continuation,()=>next);
+assert.equal(afterUpdate.activeScope,'default','one-time update continuation must keep the active owner profile');
+const sharedReleaseLink=API.resolve(updateUrl.href,null,null,()=>next);
+assert.equal(sharedReleaseLink.activeScope,token,'a normal shared URL with release= must not inherit the sender profile');
 
 const recipient=API.resolve(owner.url,null,null,()=>next);
 assert.equal(recipient.activeScope,token,'opening the shared URL in a new navigation must create/select an isolated space');
@@ -52,6 +56,20 @@ const parsed=new URL(withParams.url);
 assert.equal(parsed.searchParams.get('chineseIme'),'legacy');
 assert.equal(parsed.searchParams.get('release'),'abc');
 assert.equal(parsed.searchParams.get('share'),token);
+
+const sessionStorage=new MemoryStorage();
+sessionStorage.setItem(API.CONTINUE_KEY,JSON.stringify(continuation));
+let replaced=null;
+const booted=API.boot({
+ location:{href:updateUrl.href},
+ history:{state:null,replaceState(state,_title,url){this.state=state;replaced=url}},
+ storage:ownerStorage,
+ sessionStorage,
+ crypto:null
+});
+assert.equal(booted.activeScope,'default');
+assert.equal(replaced,updateUrl.href);
+assert.equal(sessionStorage.getItem(API.CONTINUE_KEY),null,'update continuation must be consumed exactly once');
 
 assert.ok(API.scopedKey(token,'topik_lab_v2').startsWith(API.PREFIX+token+':'));
 assert.equal(API.scopedKey(token,'unrelated_key'),'unrelated_key');
