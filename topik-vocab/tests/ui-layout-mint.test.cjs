@@ -17,6 +17,6 @@ assert.ok(!patch.includes('--success:'),'mint does not change the global success
 assert.ok(!patch.includes('.smart-progress i{'),'progress color unchanged');
 assert.match(css,/\.smart-start-stack\{display:flex;flex-direction:column;gap:16px/,'home actions retain separate spacing');
 assert.ok(app.includes('data-smart-start="learn"')&&app.includes('data-smart-start="review"'),'two independent actions');
-console.log('UI CSS: 2x2 equal stats, one smart back, centered controls, keyboard safe area, scoped mint passed');
-
 assert.doesNotMatch(app.slice(app.indexOf('function home(){'),app.indexOf('function recordsHome(){')), /smart-stats/);
+
+console.log('Home grid absent; study layout invariants passed');
