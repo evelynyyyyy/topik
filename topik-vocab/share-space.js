@@ -27,6 +27,14 @@ function createStorage(base,scope){
   removeItem(key){base.removeItem(scopedKey(scope,key))}
  };
 }
+function freshShareUrl(href,tokenFactory){
+ const url=new URL(href);
+ const token=tokenFactory();
+ if(!validToken(token))throw Error('Invalid generated share token');
+ url.searchParams.set(PARAM,token);
+ url.searchParams.delete('release');
+ return url.href;
+}
 function safeMarker(value){
  return value&&typeof value==='object'&&validToken(value.urlToken)&&
   (value.active==='default'||validToken(value.active))?value:null;
@@ -81,10 +89,10 @@ function boot(options){
   if(!marker)return false;
   try{options.sessionStorage.setItem(CONTINUE_KEY,JSON.stringify(marker));return true}catch(_){return false}
  };
- return {...result,storage:createStorage(options.storage,result.activeScope),prepareUpdate};
+ return {...result,storage:createStorage(options.storage,result.activeScope),session:createStorage(options.sessionStorage,result.activeScope),freshShareUrl:()=>freshShareUrl(result.url,()=>randomToken(options.crypto)),prepareUpdate};
 }
 
-const API={PARAM,HISTORY_KEY,CONTINUE_KEY,PREFIX,validToken,randomToken,scopedKey,createStorage,safeContinuation,makeContinuation,resolve,boot};
+const API={PARAM,HISTORY_KEY,CONTINUE_KEY,PREFIX,validToken,randomToken,scopedKey,createStorage,freshShareUrl,safeContinuation,makeContinuation,resolve,boot};
 root.TOPIK_SHARE_SPACE_API=API;
 
 if(root.document&&root.location&&root.history&&root.localStorage&&root.sessionStorage){
@@ -95,9 +103,11 @@ if(root.document&&root.location&&root.history&&root.localStorage&&root.sessionSt
   });
   root.TOPIK_SHARE_SPACE=context;
   root.TOPIK_STORAGE=context.storage;
+  root.TOPIK_SESSION_STORAGE=context.session;
  }catch(err){
   root.TOPIK_SHARE_SPACE={activeScope:'default',shareToken:null,isSharedSpace:false,error:String(err&&err.message||err),prepareUpdate:()=>false};
   root.TOPIK_STORAGE=root.localStorage;
+  root.TOPIK_SESSION_STORAGE=root.sessionStorage;
   try{console.warn('TOPIK share-space fallback:',err)}catch(_){}
  }
 }
