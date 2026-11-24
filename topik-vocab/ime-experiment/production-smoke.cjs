@@ -8,7 +8,7 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
 (async()=>{for(const [name,engine] of [['webkit',webkit],['chromium',chromium]]){
  const browser=await engine.launch();const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const page=await context.newPage();
  const errors=[];const failed=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)failed.push(r.status()+':'+r.url())});
- const start=Date.now();await page.goto(url,{waitUntil:'load',timeout:60000});
+ const start=Date.now();const initial=await page.goto(url,{waitUntil:'load',timeout:60000});assert.equal(initial.status(),200);
  assert.equal(await page.locator('.smart-home .smart-stats').count(),0,'home statistics must be removed from DOM');
  await page.locator('.smart-home [data-smart-start="learn"]').waitFor({state:'visible'});
  await page.locator('.smart-home [data-smart-start="review"]').waitFor({state:'visible'});
@@ -22,9 +22,11 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  await page.locator('#mobile-nav [data-view="settings"]').click();
  assert.equal(await page.locator('#share-fresh-space').innerText(),'分享');
  assert.ok((await page.locator('#app').innerText()).includes('分享网站'));
- await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__sharedUrl=data.url}})});
+ await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__sharedUrl=data.url;window.__sharePayload=data}})});
  await page.locator('#share-fresh-space').click();
  assert.equal(await page.evaluate(()=>window.__sharedUrl),'https://evelynyyyyy.github.io/topik/topik-vocab/');
+ assert.deepEqual(await page.evaluate(()=>window.__sharePayload),{url:'https://evelynyyyyy.github.io/topik/topik-vocab/'});
+ assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://evelynyyyyy.github.io/topik/topik-vocab/');
  await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:undefined});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async url=>{window.__copiedUrl=url}}})});
  await page.locator('#share-fresh-space').click();
  assert.equal(await page.evaluate(()=>window.__copiedUrl),'https://evelynyyyyy.github.io/topik/topik-vocab/');
