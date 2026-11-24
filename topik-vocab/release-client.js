@@ -23,6 +23,7 @@
      if(pool)sessionStorage.setItem('topik:resume-after-update',pool);
     }catch(_){}
     const url=new URL(location.href);url.searchParams.set('release',pending.buildSha);
+    try{window.TOPIK_SHARE_SPACE?.prepareUpdate?.(url.href)}catch(_){}
     location.replace(url.href);
    };
    banner.append(label,button);document.body.append(banner);
