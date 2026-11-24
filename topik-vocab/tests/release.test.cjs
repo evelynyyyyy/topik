@@ -13,6 +13,7 @@ assert.ok(app.includes('window.TOPIK_SAVE_SESSION=saveSmartSession'));
 assert.ok(app.includes("sessionStorage.getItem('topik:resume-after-update')"));
 assert.ok(client.includes("cache:'no-store'"));
 assert.ok(client.includes("window.TOPIK_SAVE_SESSION?.()"));
+assert.ok(client.includes('TOPIK_SHARE_SPACE?.prepareUpdate?.(url.href)'));
 assert.ok(client.includes('location.replace(url.href)'));
 assert.ok(client.includes("window.addEventListener('pageshow'"));
 assert.ok(client.includes("document.addEventListener('visibilitychange'"));
