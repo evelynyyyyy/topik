@@ -10,7 +10,7 @@ assert.ok(declared.every(version=>version===source.version),'all page versions a
 
 assert.ok(app.includes("const STORAGE='topik_lab_v2'"));
 assert.ok(app.includes('window.TOPIK_SAVE_SESSION=saveSmartSession'));
-assert.ok(app.includes("sessionStorage.getItem('topik:resume-after-update')"));
+assert.ok(app.includes("appSessionStorage.getItem('topik:resume-after-update')"));
 assert.ok(client.includes("cache:'no-store'"));
 assert.ok(client.includes("window.TOPIK_SAVE_SESSION?.()"));
 assert.ok(client.includes('TOPIK_SHARE_SPACE?.prepareUpdate?.(url.href)'));
