@@ -119,9 +119,8 @@ function smartDailyStats(){
  return {goal:state.dailyGoal,introduced:learned.size,firstBoth:words.filter(w=>{const t=Number(state.lifecycle?.[w[1]]?.firstBothAt||0);return t&&new Date(t).toLocaleDateString('sv-SE')===key}).length,learning:words.filter(w=>TOPIK_SMART.wordState(state,w[1])==='LEARNING').length,graduated,learnTasks:Number(d.smartLearnTasks)||0,reviewGoal,reviewDone:roundDone,reviewDue,reviewTasks:Number(d.smartReviewTasks)||0};
 }
 function home(){
- const n=counts(),sum=TOPIK_SMART.summary(state,scope(),levelDayInfo(),state.dailyGoal),stats=smartDailyStats();
+ const stats=smartDailyStats();
  return '<div class="smart-home"><div class="eyebrow">今日学习 · '+today()+'</div><h1>TOPIK单词</h1>'+levelBar()+
- '<div class="smart-stats"><div><strong>'+stats.graduated+' <small>/ '+sum.goal+'</small></strong><span>今日已学会</span></div><div><strong>'+stats.introduced+'</strong><span>今日接触新词</span></div><div><strong>'+sum.consolidating+'</strong><span>学习中</span></div><div><strong>'+stats.reviewDue+'</strong><span>今日待复习</span></div></div>'+
  '<div class="smart-start-stack"><button class="primary smart-start" data-smart-start="learn">开始学习 · '+stats.graduated+'/'+stats.goal+' <span>→</span></button><button class="primary smart-start" data-smart-start="review">开始复习 · 待复习 '+stats.reviewDue+' <span>→</span></button></div>'+ (stats.reviewDue===0?'<p class="tiny muted">今日复习已完成</p>':'')+
  '<p class="tiny muted smart-home-note">新词学习与到期复习分池安排 · 学习毕业后交给 FSRS。</p></div>';
 }
