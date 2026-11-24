@@ -74,4 +74,21 @@ assert.equal(sessionStorage.getItem(API.CONTINUE_KEY),null,'update continuation 
 assert.ok(API.scopedKey(token,'topik_lab_v2').startsWith(API.PREFIX+token+':'));
 assert.equal(API.scopedKey(token,'unrelated_key'),'unrelated_key');
 
+const ownerSession=new MemoryStorage();
+const defaultSession=API.createStorage(ownerSession,'default');
+const recipientSession=API.createStorage(ownerSession,token);
+defaultSession.setItem('topik:resume-after-update','learn');
+recipientSession.setItem('topik:resume-after-update','review');
+assert.equal(defaultSession.getItem('topik:resume-after-update'),'learn');
+assert.equal(recipientSession.getItem('topik:resume-after-update'),'review');
+recipientSession.removeItem('topik:resume-after-update');
+assert.equal(defaultSession.getItem('topik:resume-after-update'),'learn','clearing one space resume state must not affect another');
+
+const third='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+const fresh=API.freshShareUrl(owner.url,()=>third);
+assert.equal(new URL(fresh).searchParams.get('share'),third);
+assert.equal(new URL(fresh).searchParams.has('release'),false);
+assert.notEqual(fresh,owner.url,'internal sharing must mint a fresh entry URL rather than forwarding the current space token');
+assert.equal(API.resolve(fresh,null,null,()=>next).activeScope,third);
+
 console.log('share-space.test.cjs passed');
