@@ -3,7 +3,7 @@
 'use strict';
 const PARAM='share';
 const HISTORY_KEY='__topikShareSpaceV1';
-const SESSION_KEY='topik:share-space-tab-v1';
+const CONTINUE_KEY='topik:share-space-update-v1';
 const PREFIX='topik_space_v1:';
 
 function validToken(value){
@@ -31,16 +31,27 @@ function safeMarker(value){
  return value&&typeof value==='object'&&validToken(value.urlToken)&&
   (value.active==='default'||validToken(value.active))?value:null;
 }
-function resolve(href,historyState,sessionMarker,tokenFactory){
+function safeContinuation(value){
+ const marker=safeMarker(value);
+ return marker&&typeof value.release==='string'&&value.release.length>0?value:null;
+}
+function makeContinuation(activeScope,shareToken,targetHref){
+ const url=new URL(targetHref);
+ const release=url.searchParams.get('release')||'';
+ if(!release||!validToken(shareToken)||(activeScope!=='default'&&!validToken(activeScope)))return null;
+ return {urlToken:shareToken,active:activeScope,release};
+}
+function resolve(href,historyState,continuation,tokenFactory){
  const url=new URL(href);
  const raw=url.searchParams.get(PARAM);
  const incoming=validToken(raw)?raw:'';
  const history=safeMarker(historyState&&historyState[HISTORY_KEY]);
- const session=safeMarker(sessionMarker);
+ const resume=safeContinuation(continuation);
+ const release=url.searchParams.get('release')||'';
  let active='default';
  if(incoming){
   if(history&&history.urlToken===incoming)active=history.active;
-  else if(url.searchParams.has('release')&&session&&session.urlToken===incoming)active=session.active;
+  else if(resume&&resume.urlToken===incoming&&resume.release===release)active=resume.active;
   else active=incoming;
  }
  let shareToken=incoming;
@@ -56,20 +67,24 @@ function resolve(href,historyState,sessionMarker,tokenFactory){
   shareToken,
   isSharedSpace:active!=='default',
   url:url.href,
-  historyState:{...baseState,[HISTORY_KEY]:marker},
-  sessionMarker:marker
+  historyState:{...baseState,[HISTORY_KEY]:marker}
  };
 }
 function boot(options){
- let sessionMarker=null;
- try{sessionMarker=JSON.parse(options.sessionStorage.getItem(SESSION_KEY)||'null')}catch(_){}
- const result=resolve(options.location.href,options.history.state,sessionMarker,()=>randomToken(options.crypto));
+ let continuation=null;
+ try{continuation=JSON.parse(options.sessionStorage.getItem(CONTINUE_KEY)||'null')}catch(_){}
+ try{options.sessionStorage.removeItem(CONTINUE_KEY)}catch(_){}
+ const result=resolve(options.location.href,options.history.state,continuation,()=>randomToken(options.crypto));
  options.history.replaceState(result.historyState,'',result.url);
- try{options.sessionStorage.setItem(SESSION_KEY,JSON.stringify(result.sessionMarker))}catch(_){}
- return {...result,storage:createStorage(options.storage,result.activeScope)};
+ const prepareUpdate=targetHref=>{
+  const marker=makeContinuation(result.activeScope,result.shareToken,targetHref);
+  if(!marker)return false;
+  try{options.sessionStorage.setItem(CONTINUE_KEY,JSON.stringify(marker));return true}catch(_){return false}
+ };
+ return {...result,storage:createStorage(options.storage,result.activeScope),prepareUpdate};
 }
 
-const API={PARAM,HISTORY_KEY,SESSION_KEY,PREFIX,validToken,randomToken,scopedKey,createStorage,resolve,boot};
+const API={PARAM,HISTORY_KEY,CONTINUE_KEY,PREFIX,validToken,randomToken,scopedKey,createStorage,safeContinuation,makeContinuation,resolve,boot};
 root.TOPIK_SHARE_SPACE_API=API;
 
 if(root.document&&root.location&&root.history&&root.localStorage&&root.sessionStorage){
@@ -81,7 +96,7 @@ if(root.document&&root.location&&root.history&&root.localStorage&&root.sessionSt
   root.TOPIK_SHARE_SPACE=context;
   root.TOPIK_STORAGE=context.storage;
  }catch(err){
-  root.TOPIK_SHARE_SPACE={activeScope:'default',shareToken:null,isSharedSpace:false,error:String(err&&err.message||err)};
+  root.TOPIK_SHARE_SPACE={activeScope:'default',shareToken:null,isSharedSpace:false,error:String(err&&err.message||err),prepareUpdate:()=>false};
   root.TOPIK_STORAGE=root.localStorage;
   try{console.warn('TOPIK share-space fallback:',err)}catch(_){}
  }
