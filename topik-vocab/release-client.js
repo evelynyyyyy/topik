@@ -9,13 +9,20 @@
  const bannerId='topik-release-notice';
  function showUpdate(next){
   pending=next;
+  renderNotice();
+ }
+ function renderNotice(){
+  document.body.classList.toggle('topik-update-available',!!pending);
+  const slot=document.getElementById('topik-release-slot');if(!slot)return;
   let banner=document.getElementById(bannerId);
+  if(!pending){if(banner)banner.hidden=true;return}
+  const next=pending;
   if(!banner){
    banner=document.createElement('div');banner.id=bannerId;banner.setAttribute('role','status');
    banner.className='topik-release-notice';
    const label=document.createElement('span');label.id='topik-release-label';
    const button=document.createElement('button');button.type='button';button.className='primary';button.textContent='立即更新';
-   const later=document.createElement('button');later.type='button';later.className='line-btn';later.textContent='稍后提醒';later.onclick=()=>{banner.hidden=true};
+   const later=document.createElement('button');later.type='button';later.className='line-btn';later.textContent='稍后';later.onclick=()=>{banner.hidden=true};
    button.onclick=()=>{
     if(!pending||updating)return;
     updating=true;button.disabled=true;
@@ -31,7 +38,7 @@
      location.replace(url.href);
     }catch(err){updating=false;button.disabled=false;label.textContent='更新前保存失败，请重试（当前学习未中断）';}
    };
-   banner.append(label,button,later);document.getElementById('topik-release-slot').append(banner);
+   banner.append(label,button,later);slot.append(banner);
   }
   banner.hidden=false;
   banner.querySelector('#topik-release-label').textContent='发现新版本 v'+next.version+'（当前 v'+release.version+'）';
@@ -47,10 +54,11 @@
    let response,remote;try{response=await fetch(url.href,{cache:'no-store',headers:{'Cache-Control':'no-cache'},signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);remote=await response.json()}finally{clearTimeout(timeout)}
    if(!remote||typeof remote.version!=='string'||!/^[a-f0-9]{40}$/.test(remote.buildSha||''))throw Error('invalid release manifest');
    if(remote.buildSha!==release.buildSha){if(release.buildTime&&remote.buildTime&&Date.parse(remote.buildTime)<Date.parse(release.buildTime))return false;showUpdate(remote);return true}
-   pending=null;const banner=document.getElementById(bannerId);if(banner)banner.hidden=true;return false;
+   pending=null;renderNotice();return false;
   }catch(err){return null}
   finally{checking=false}
  }
+ window.TOPIK_RENDER_UPDATE=renderNotice;
  window.TOPIK_CHECK_UPDATE=()=>check(true);
  window.addEventListener('pageshow',()=>{void check()});
  window.addEventListener('focus',()=>{void check()});
