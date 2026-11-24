@@ -19,6 +19,16 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  assert.equal(new URL(page.url()).searchParams.has('share'),false);assert.equal(new URL(page.url()).searchParams.has('space'),false);
  const sharedUrl=await page.evaluate(()=>window.TOPIK_SHARE_SPACE.freshShareUrl()),shareToken=new URL(sharedUrl).searchParams.get('space');
  assert.match(shareToken||'',/^[A-Za-z0-9_-]{16,64}$/);
+ await page.locator('#mobile-nav [data-view="settings"]').click();
+ assert.equal(await page.locator('#share-fresh-space').innerText(),'分享');
+ assert.ok((await page.locator('#app').innerText()).includes('分享网站'));
+ await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__sharedUrl=data.url}})});
+ await page.locator('#share-fresh-space').click();
+ assert.equal(await page.evaluate(()=>window.__sharedUrl),'https://evelynyyyyy.github.io/topik/topik-vocab/');
+ await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:undefined});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async url=>{window.__copiedUrl=url}}})});
+ await page.locator('#share-fresh-space').click();
+ assert.equal(await page.evaluate(()=>window.__copiedUrl),'https://evelynyyyyy.github.io/topik/topik-vocab/');
+ await page.locator('#mobile-nav [data-view="home"]').click();
  const ownerMarker='owner-'+name;
  await page.evaluate(marker=>{const data=JSON.parse(localStorage.getItem('topik_lab_v2')||'{}');data.__shareTestMarker=marker;localStorage.setItem('topik_lab_v2',JSON.stringify(data))},ownerMarker);
  const shortcut=await context.newPage();await shortcut.goto(url,{waitUntil:'load'});assert.equal(await shortcut.evaluate(()=>window.TOPIK_SHARE_SPACE.activeScope),'default');assert.equal(await shortcut.evaluate(()=>JSON.parse(window.TOPIK_STORAGE.getItem('topik_lab_v2')).__shareTestMarker),ownerMarker);await shortcut.close();
