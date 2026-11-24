@@ -9,7 +9,7 @@ assert.ok(declared.length>20,'version and asset references must be present');
 assert.ok(declared.every(version=>version===source.version),'all page versions and static asset cache keys match release source');
 
 assert.ok(app.includes("const STORAGE='topik_lab_v2'"));
-assert.ok(app.includes('window.TOPIK_SAVE_SESSION=saveSmartSession'));
+assert.ok(app.includes('window.TOPIK_SAVE_SESSION=()=>{saveSmartSession();appStorage.setItem'));
 assert.ok(app.includes("appSessionStorage.getItem('topik:resume-after-update')"));
 assert.ok(client.includes("cache:'no-store'"));
 assert.ok(client.includes("window.TOPIK_SAVE_SESSION?.()"));
@@ -25,4 +25,7 @@ assert.ok(build.includes("crypto.createHash('sha256')"));
 assert.ok(build.includes("release.json"));
 assert.ok(workflow.includes('needs: [test-and-build, deploy]'));
 assert.ok(workflow.includes('verify-online.cjs'));
+assert.ok(client.includes('600000'));
+assert.ok(client.includes("window.addEventListener('focus'"));
+assert.ok(client.includes("prepareUpdate?.(url.href)!==true"));
 console.log('Release safety, update, immutable assets and gated verification checks passed');
