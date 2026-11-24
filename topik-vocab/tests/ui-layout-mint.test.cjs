@@ -6,9 +6,6 @@ const app=fs.readFileSync('topik-vocab/app.js','utf8');
 const html=fs.readFileSync('topik-vocab/index.html','utf8');
 const patch=css.slice(css.indexOf('/* Study UI alignment only:'));
 assert.ok(patch.startsWith('/* Study UI alignment only:'),'layout patch exists');
-assert.match(patch,/\.smart-home \.smart-stats\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\);grid-auto-rows:1fr;gap:16px\}/,'home has two equal columns and equal rows');
-assert.match(patch,/\.smart-home \.smart-stats>div\{[^}]*min-width:0;min-height:76px;justify-content:center;text-align:center/,'stat cells centered');
-assert.match(app,/<span>今日已学会<\/span>[\s\S]*?<span>今日接触新词<\/span>[\s\S]*?<span>学习中<\/span>[\s\S]*?<span>今日待复习<\/span>/,'home stats remain in requested order');
 assert.match(patch,/\.study-focus-mode \.topbar \.study-back\{display:none\}/,'mobile topbar back hidden');
 assert.equal(app.split('class="text-btn smart-back"').length-1,1,'one in-page smart back button');
 assert.ok(html.includes('class="text-btn study-back"'),'global back remains for other contexts');
@@ -20,4 +17,6 @@ assert.ok(!patch.includes('--success:'),'mint does not change the global success
 assert.ok(!patch.includes('.smart-progress i{'),'progress color unchanged');
 assert.match(css,/\.smart-start-stack\{display:flex;flex-direction:column;gap:16px/,'home actions retain separate spacing');
 assert.ok(app.includes('data-smart-start="learn"')&&app.includes('data-smart-start="review"'),'two independent actions');
-console.log('UI CSS: 2x2 equal stats, one smart back, centered controls, keyboard safe area, scoped mint passed');
+console.log('UI CSS: one smart back, centered controls, keyboard safe area, scoped mint passed');
+
+assert.doesNotMatch(app.slice(app.indexOf('function home(){'),app.indexOf('function recordsHome(){')), /smart-stats/);
