@@ -629,7 +629,7 @@ function render(){
 async function shareFreshSpace(){
  const href='https://evelynyyyyy.github.io/topik/topik-vocab/';
  try{
-  if(navigator.share){await navigator.share({title:'TOPIK单词',url:href});return}
+  if(navigator.share){await navigator.share({url:href});return}
   await navigator.clipboard.writeText(href);notify('网站链接已复制')
  }catch(err){if(err?.name!=='AbortError')notify('分享失败，请稍后重试')}
 }
