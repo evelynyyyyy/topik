@@ -48,5 +48,5 @@ assert.equal(S.wordState(historical,'old'),'REVIEW','existing historical review 
 const app=fs.readFileSync('topik-vocab/app.js','utf8');
 assert.ok(app.includes("if(correct)markRecall(word[1],mode)"),'wrong answer cannot mark first recall');
 assert.ok(app.includes("stats.graduated+' <small>/ '"),'home goal counts graduates');
-assert.ok(app.includes('今日接触新词')&&app.includes('学习中'));
+assert.ok(app.includes('今日接触新词')&&app.includes('学习中单词'));
 console.log('Graduation, wrong-answer reset, three spaced rounds, legacy preservation, reload and unique count verified');
