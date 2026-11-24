@@ -109,7 +109,7 @@ async function perf(p,name){
   const browser=await engine.launch();const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.goto(base,{waitUntil:'load'});
-  await checkDelete(p,name);await swipe(p,name);await scheduler(p,name);await perf(p,name);
+  await checkDelete(p,name);await swipe(p,name);await scheduler(p,name);const perfPage=await context.newPage();await perfPage.goto(base,{waitUntil:'load'});await perf(perfPage,name);await perfPage.close();
   assert.deepEqual(errors,[]);console.log(JSON.stringify({browser:name,test:'special-acceptance-complete',passed:true}));
   await browser.close();
  }
