@@ -9,6 +9,11 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  const browser=await engine.launch();const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const page=await context.newPage();
  const errors=[];const failed=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)failed.push(r.status()+':'+r.url())});
  const start=Date.now();await page.goto(url,{waitUntil:'load',timeout:60000});
+ assert.equal(await page.locator('.smart-home .smart-stats').count(),0,'home statistics must be removed from DOM');
+ await page.locator('.smart-home [data-smart-start="learn"]').waitFor({state:'visible'});
+ await page.locator('.smart-home [data-smart-start="review"]').waitFor({state:'visible'});
+ assert.match(await page.locator('.smart-home [data-smart-start="learn"]').innerText(),/开始学习 · \d+\/\d+/);
+ assert.match(await page.locator('.smart-home [data-smart-start="review"]').innerText(),/开始复习 · 待复习 \d+/);
  assert.equal(await page.evaluate(()=>window.CHINESE_IME_ENGINE),'simple-ime');
  assert.equal(await page.locator('script[src*="simple-ime-core"]').count(),0,'engine should be lazy');
  assert.equal(new URL(page.url()).searchParams.has('share'),false);assert.equal(new URL(page.url()).searchParams.has('space'),false);
