@@ -6,7 +6,7 @@ async function setTask(page,mode,word='되다'){await page.evaluate(({mode,word}
 async function typeChinese(page,py){for(const k of py)await page.locator('.pinyin-keyboard [data-pinyin-key="'+k+'"]').click()}
 async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ':'ㄷ','ㄲ':'ㄱ','ㅆ':'ㅅ','ㅒ':'ㅐ','ㅖ':'ㅔ'};for(const k of keys){if(shifted[k]){await page.locator('[data-hangul-shift]').click();await page.locator('.hangul-keyboard [data-hangul="'+shifted[k]+'"]').click()}else await page.locator('.hangul-keyboard [data-hangul="'+k+'"]').click()}}
 (async()=>{for(const [name,engine] of [['webkit',webkit],['chromium',chromium]]){
- const browser=await engine.launch();const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ const browser=await engine.launch();const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const page=await context.newPage();
  const errors=[];const failed=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)failed.push(r.status()+':'+r.url())});
  const start=Date.now();await page.goto(url,{waitUntil:'load',timeout:60000});
  assert.equal(await page.evaluate(()=>window.CHINESE_IME_ENGINE),'simple-ime');
@@ -15,7 +15,7 @@ async function typeKorean(page,keys){const shifted={'ㅃ':'ㅂ','ㅉ':'ㅈ','ㄸ
  assert.match(shareToken||'',/^[A-Za-z0-9_-]{16,64}$/);
  const ownerMarker='owner-'+name;
  await page.evaluate(marker=>{const data=JSON.parse(localStorage.getItem('topik_lab_v2')||'{}');data.__shareTestMarker=marker;localStorage.setItem('topik_lab_v2',JSON.stringify(data))},ownerMarker);
- const sharedPage=await page.context().newPage();
+ const sharedPage=await context.newPage();
  await sharedPage.goto(sharedUrl,{waitUntil:'load',timeout:60000});
  const isolated=await sharedPage.evaluate(()=>({scope:window.TOPIK_SHARE_SPACE?.activeScope||null,token:new URL(location.href).searchParams.get('share'),owner:JSON.parse(localStorage.getItem('topik_lab_v2')||'{}').__shareTestMarker||null,shared:JSON.parse((window.TOPIK_STORAGE||localStorage).getItem('topik_lab_v2')||'{}').__shareTestMarker||null}));
  assert.equal(isolated.scope,shareToken);assert.equal(isolated.token,shareToken);assert.equal(isolated.owner,ownerMarker);assert.equal(isolated.shared,null);
