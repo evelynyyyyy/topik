@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs=require('node:fs'),zlib=require('node:zlib');
 const engineBytes=fs.readFileSync('topik-vocab/ime-experiment/simple-ime-core.js');
 console.log(JSON.stringify({kind:'engine-asset-size',rawBytes:engineBytes.length,gzipBytes:zlib.gzipSync(engineBytes).length,brotliBytes:zlib.brotliCompressSync(engineBytes).length}));
-const URL = 'https://evelynyyyyy.github.io/study-abroad/topik-vocab/ime-experiment/';
+const URL = 'https://evelynyyyyy.github.io/topik/topik-vocab/ime-experiment/';
 const expected={jian:'间',cheng:'成',chengwei:'成为',shijian:'时间',fangjian:'房间',zhongjian:'中间',xuesheng:'学生',xuexi:'学习',gongzuo:'工作',pengyou:'朋友',keyi:'可以',ranhou:'然后'};
 (async()=>{
 for(const [name,engine] of [['webkit',webkit],['chromium',chromium]]){
