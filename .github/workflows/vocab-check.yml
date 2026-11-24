@@ -21,6 +21,7 @@ jobs:
           node-version: '22'
       - name: Verify JavaScript syntax
         run: |
+          node --check topik-vocab/share-space.js
           node --check topik-vocab/theme.js
           node --check topik-vocab/pinyin-keyboard.js
           node --check topik-vocab/korean-ime-engine.js
@@ -38,6 +39,7 @@ jobs:
           node --check topik-vocab/lexicon-quality.js
       - name: Test first learning lifecycle and independent recall
         run: |
+          node topik-vocab/tests/share-space.test.cjs
           node topik-vocab/tests/theme.test.cjs
           node topik-vocab/tests/pinyin-keyboard.test.cjs
           node topik-vocab/tests/hangul-keyboard.test.cjs
