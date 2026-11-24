@@ -10,7 +10,7 @@
 
 # TOPIK单词
 
-静态网页，部署于 GitHub Pages：<https://evelynyyyyy.github.io/study-abroad/topik-vocab/>
+静态网页，部署于 GitHub Pages：<https://evelynyyyyy.github.io/topik/topik-vocab/>
 
 **网站名称为「TOPIK单词」。** 无需服务器、数据库或 npm 构建；入口为 `index.html`，界面样式在 `styles.css`，学习逻辑在 `app.js`，扩充词库在 `vocabulary.js`。
 
