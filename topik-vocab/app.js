@@ -5,8 +5,9 @@ const built=[
 const detail={
 "학교":["학교에 가요.","去学校。",""],"학생":["저는 학생이에요.","我是学生。",""],"선생님":["선생님이 오셨어요.","老师来了。",""],"친구":["친구를 만나요.","见朋友。",""],"책":["책을 읽어요.","读书。",""],"물":["물을 마셔요.","喝水。",""],"밥":["밥을 먹어요.","吃饭。",""],"집":["집에 있어요.","在家。",""],"오늘":["오늘 공부해요.","今天学习。",""],"내일":["내일 만나요.","明天见。",""],"사람":["사람이 많아요.","人很多。",""],"한국어":["한국어를 공부해요.","学习韩语。",""],"시험":["시험을 준비해요.","准备考试。",""],"대학":["대학에 다녀요.","上大学。",""],"운동":["매일 운동해요.","每天运动。",""],"여행":["한국으로 여행을 가요.","去韩国旅行。",""],"문제":["문제를 풀어요.","解题。",""],"건강":["건강이 중요해요.","健康很重要。",""],"경험":["좋은 경험이었어요.","是很好的经历。",""],"환경":["환경을 보호해요.","保护环境。",""],"발전":["기술이 발전해요.","技术在发展。",""],"학교":["학교에 가요.","去学校。","[학꾜]"],"학생":["저는 학생이에요.","我是学生。","[학쌩]"],"한국어":["한국어를 공부해요.","学习韩语。","[한구거]"]
 };
-// Global local-first invariant: the public URL contains no profile data; each browser owns its own learning state.
-// Never load learning state from URL/query/hash or shared remote storage. Backup import requires explicit file selection.
+// Global local-first invariant: share URLs contain only an opaque space token, never profile data.
+// The default profile keeps the original storage keys; a received share token uses an isolated browser-local namespace.
+const appStorage=window.TOPIK_STORAGE||localStorage;
 const STORAGE='topik_lab_v2';
 const today=()=>new Date().toLocaleDateString('sv-SE');
 const parse=(key,otherwise)=>{try{return JSON.parse(localStorage.getItem(key))??otherwise}catch{return otherwise}};
