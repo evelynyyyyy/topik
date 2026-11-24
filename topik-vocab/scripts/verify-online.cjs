@@ -23,6 +23,14 @@ async function verify(){
   const bytes=Buffer.from(await (await get(url)).arrayBuffer());
   assert.equal(crypto.createHash('sha256').update(bytes).digest('hex').slice(0,16),asset.hash,'Asset content mismatch '+asset.output);
  }
+ const canonical='https://evelynyyyyy.github.io/topik/topik-vocab/';
+ const sharedResponse=await get(canonical);
+ assert.equal(sharedResponse.status,200,'Clean share URL must return HTTP 200');
+ assert.equal(sharedResponse.url,canonical,'Clean share URL must preserve full path');
+ const sharedHtml=await sharedResponse.text();
+ assert.ok(sharedHtml.includes(sha),'Clean share URL must serve current build');
+ assert.ok(sharedHtml.includes('<link rel="canonical" href="'+canonical+'">'),'Canonical URL missing');
+ console.log('VERIFIED clean share URL HTTP 200',sharedResponse.url);
  const pronunciation=await (await get(new URL('audio/manifest.json?verify='+marker,base))).json();
  assert.equal(pronunciation.source?.model,'akamotaco/ppaso-tts-v1');
  assert.equal(pronunciation.source?.license,'Apache-2.0');
