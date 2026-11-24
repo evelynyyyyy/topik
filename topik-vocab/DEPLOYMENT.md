@@ -1,14 +1,14 @@
 # TOPIK单词：正式网址与部署约定
 
-**固定公开入口**：https://evelynyyyyy.github.io/study-abroad/k/
+**固定公开入口**：https://evelynyyyyy.github.io/topik/k/
 
-**实际应用路径**：https://evelynyyyyy.github.io/study-abroad/topik-vocab/
+**实际应用路径**：https://evelynyyyyy.github.io/topik/topik-vocab/
 
-**仓库**：`evelynyyyyy/study-abroad`；**发布分支**：`gh-pages`；**GitHub Pages 源目录**：分支根目录 `/`（由已有成功的 Pages 构建记录及发布路径确认；GitHub Pages Settings API 当前未授权读取）。
+**仓库**：`evelynyyyyy/topik`；**发布分支**：`gh-pages`；**GitHub Pages 源目录**：分支根目录 `/`（由已有成功的 Pages 构建记录及发布路径确认；GitHub Pages Settings API 当前未授权读取）。
 
 ## 后续发布规则
 
-1. 所有正式修改只更新上述仓库的 `gh-pages` 分支下 `topik-vocab/` 文件，继续使用原有发布路径；不得新建版本目录、变更公开入口、覆盖仓库根 `index.html`（该文件属于另一网站）。
+1. 所有正式修改只更新上述仓库的 `gh-pages` 分支下 `topik-vocab/` 文件，继续使用原有发布路径；不得新建版本目录、擅自变更公开入口或覆盖仓库根 `index.html`。
 2. `k/index.html` 是固定短链接的同源跳转入口。不得删除它，也不得改为不同来源的域名；自动测试验证其指向 `../topik-vocab/`。
 3. 资源文件可以在 HTML 内部添加版本参数以更新浏览器缓存，但对用户提供的**公开网址**不得添加版本号或随机参数。
 4. 保留 `localStorage` 主键 `topik_lab_v2`，对新字段使用兼容迁移；不得清空浏览器存储。CI 验证固定入口和导入导出功能仍存在。
@@ -24,3 +24,9 @@
 ## 独立域名（未启用）
 
 候选如 `kword.study`、`mykorean.app`、`korwords.com` 都需先核实可注册性、购买价格及续费价格。购得域名后，在 GitHub Pages 设置自定义域名，按 GitHub 的指引配置 DNS（子域通常 CNAME，根域通常 A/AAAA/ALIAS），待证书签发后启用 HTTPS。未经用户明确批准，不修改 DNS、Pages 自定义域名或旧站重定向。
+
+## 仓库重命名兼容说明
+
+仓库从 `study-abroad` 原地重命名为 `topik` 后，Pages 的项目路径变为 `/topik/`；旧的 `/study-abroad/` Pages 路径不能仅依赖 GitHub 仓库重定向，旧分享链接需要单独部署兼容入口才能保证有效，且不得未经授权创建同名旧仓库。
+
+现有学习记录继续使用同一源 `https://evelynyyyyy.github.io` 下的 localStorage 主键 `topik_lab_v2`、`topik_theme_preference`、`topik_extra` 和 `topik_records`；保留 `topik_lab_v2_review_migration_v2_backup`，以及 sessionStorage 键 `topik:resume-after-update`。不得因路径变更改名或清理这些键，也不得变更 FSRS 结构。没有已实现的独立账户/分享空间隔离功能；复制公开网址不会传输学习数据，同一浏览器和同一源的页面共用学习记录。
