@@ -38,6 +38,7 @@ jobs:
         env:
           STUDY_E2E_URL: http://127.0.0.1:8765/topik-vocab/
         run: |
+          node -e "const fs=require('fs');const v=require('./topik-vocab/release-source.json').version;fs.writeFileSync('topik-vocab/release.json',JSON.stringify({version:v,buildSha:process.env.GITHUB_SHA,buildTime:new Date().toISOString(),assetVersion:process.env.GITHUB_SHA}))"
           python3 -m http.server 8765 --bind 127.0.0.1 &
           node topik-vocab/ime-experiment/production-smoke.cjs
           node topik-vocab/ime-experiment/special-acceptance.cjs
