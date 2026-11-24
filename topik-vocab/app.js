@@ -7,8 +7,8 @@ const detail={
 };
 // Global local-first invariant: share URLs contain only an opaque space token, never profile data.
 // The default profile keeps the original storage keys; a received share token uses an isolated browser-local namespace.
-const appStorage=window.TOPIK_STORAGE||localStorage;
-const appSessionStorage=window.TOPIK_SESSION_STORAGE||sessionStorage;
+const appStorage=window.TOPIK_STORAGE;
+const appSessionStorage=window.TOPIK_SESSION_STORAGE;
 const STORAGE='topik_lab_v2';
 const today=()=>new Date().toLocaleDateString('sv-SE');
 const parse=(key,otherwise)=>{try{return JSON.parse(appStorage.getItem(key))??otherwise}catch{return otherwise}};
@@ -76,7 +76,6 @@ function weak(ko){let p=state.progress[ko]||{};return ['read','meaning','spell']
 function counts(){let w=scope(),d=levelDayInfo();return{total:w.length,learned:w.filter(x=>hasSeen(x[1])).length,due:w.filter(x=>['consolidating','long-term','mastered','reviewing'].includes(learningStage(x[1]))&&['meaning','spell'].some(m=>isDue(x[1],m))).length,writeDue:w.filter(x=>isDue(x[1],'spell')).length,wrong:w.filter(x=>weak(x[1])>0).length,today:d.learned.length}}
 function quote(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function notify(s){let t=document.getElementById('toast');t.textContent=s;t.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add('hidden'),3000)}
-function theme(){window.TOPIK_THEME.apply()}
 const koreanSpeech=window.TOPIK_PRONUNCIATION.createController({
  speechSynthesis:window.speechSynthesis,
  SpeechSynthesisUtterance:window.SpeechSynthesisUtterance,
@@ -611,7 +610,7 @@ function resetLearning(scope){
  relearnSelection.clear();persist();change('home');notify('已清空 '+outcome.removed+' 个词的学习状态'+(outcome.shared?'，保留 '+outcome.shared+' 个跨等级共用词':'') );
 }
 function render(){
- theme();renderNav();document.body.classList.toggle('study-focus-mode',['smart','onboard','session'].includes(view));
+ window.TOPIK_THEME.apply();renderNav();document.body.classList.toggle('study-focus-mode',['smart','onboard','session'].includes(view));
  const topLevel=document.getElementById('top-level-select');if(topLevel)topLevel.value=String(state.level);
  const app=document.getElementById('app');
  const previous=app.querySelector('#spell-input');
