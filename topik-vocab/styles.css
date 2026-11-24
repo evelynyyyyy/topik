@@ -516,3 +516,15 @@ dialog,[role="dialog"],.modal{background:var(--surface);color:var(--foreground);
 .smart-feedback.good .smart-user-answer{color:#A8E6CF}
 .smart-feedback.bad .smart-user-answer{color:#F2A3A3}
 .smart-feedback.skipped .smart-user-answer{color:#A3A3A3}
+
+/* Release notice: in-flow, using the existing monochrome theme tokens. */
+#topik-release-slot{width:min(100%,770px);margin:0 auto;padding:0 42px}
+.topik-release-notice{margin-top:12px;padding:14px 16px;border:1px solid var(--border-strong);border-radius:var(--radius-lg);background:var(--surface);color:var(--foreground);display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.topik-release-notice[hidden]{display:none!important}
+#topik-release-label{flex:1 1 180px;font-weight:550;overflow-wrap:anywhere}
+.topik-release-notice button{font-size:13px;padding:8px 12px;white-space:nowrap}
+.topik-release-notice .line-btn{background:transparent;border-color:var(--border-strong)}
+.study-focus-mode .topik-release-notice{padding:6px 10px;margin-top:6px;gap:6px;font-size:12px}
+.study-focus-mode #topik-release-label{flex-basis:120px}
+.study-focus-mode .topik-release-notice button{padding:5px 8px;font-size:12px}
+@media(max-width:760px){#topik-release-slot{padding:0 22px}.topik-release-notice{padding:10px 12px}}
