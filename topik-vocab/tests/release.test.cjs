@@ -32,12 +32,12 @@ console.log('Release safety, update, immutable assets and gated verification che
 
 const vm=require('node:vm');
 (async()=>{
- const events={},nodes={},requests=[],writes=[];let now=100000,remote={version:'3.9.4',buildSha:'b'.repeat(40)},timer,nav,save=true,continuation=true;
+ const events={},nodes={'topik-release-slot':{append(n){nodes[n.id]=n}}},requests=[],writes=[];let now=100000,remote={version:'3.9.4',buildSha:'b'.repeat(40)},timer,nav,save=true,continuation=true;
  const node=()=>({style:{},append(...children){for(const child of children)if(child.id)nodes[child.id]=child;this.children=children},setAttribute(){},querySelector(id){return nodes[id.slice(1)]}});
  const document={visibilityState:'visible',hidden:false,querySelector(){return null},getElementById(id){return nodes[id]},createElement:node,body:{append(n){nodes[n.id]=n}},addEventListener(k,v){events[k]=v}};
  const location={href:'https://example.test/topik-vocab/?share=aaaaaaaaaaaaaaaa',replace(u){nav=u}};
  const window={TOPIK_RELEASE:{version:'3.9.3',buildSha:'a'.repeat(40)},TOPIK_SAVE_SESSION:()=>{writes.push('save');return save},TOPIK_ACTIVE_SMART_POOL:()=> 'review',TOPIK_SESSION_STORAGE:{setItem(k,v){writes.push(v)},removeItem(){}},TOPIK_SHARE_SPACE:{prepareUpdate(u){writes.push(u);return continuation}},addEventListener(k,v){events[k]=v},setInterval(fn,ms){assert.equal(ms,600000);timer=fn}};
- vm.runInNewContext(client,{window,document,location,URL,Date:{now:()=>now,parse:Date.parse},navigator:{},fetch:async(u,o)=>{requests.push([u,o]);return {ok:true,json:async()=>remote}},console});
+ vm.runInNewContext(client,{window,document,location,URL,Date:{now:()=>now,parse:Date.parse},navigator:{},AbortController,setTimeout,clearTimeout,fetch:async(u,o)=>{requests.push([u,o]);return {ok:true,json:async()=>remote}},console});
  const flush=()=>new Promise(r=>setImmediate(r));
  events.DOMContentLoaded();await flush();assert.equal(requests.length,1);assert.equal(requests[0][1].cache,'no-store');assert.match(nodes['topik-release-label'].textContent,/3.9.4/);
  events.pageshow();events.focus();await flush();assert.equal(requests.length,1);

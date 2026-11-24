@@ -13,9 +13,9 @@
   if(!banner){
    banner=document.createElement('div');banner.id=bannerId;banner.setAttribute('role','status');
    banner.className='topik-release-notice';
-   Object.assign(banner.style,{position:'fixed',top:'calc(env(safe-area-inset-top, 0px) + 8px)',right:'12px',maxWidth:'calc(100% - 24px)',zIndex:'10000',background:'Canvas',color:'CanvasText',border:'1px solid GrayText',borderRadius:'12px',padding:'10px',display:'flex',gap:'10px',flexWrap:'wrap'});
    const label=document.createElement('span');label.id='topik-release-label';
-   const button=document.createElement('button');button.type='button';button.textContent='立即更新';
+   const button=document.createElement('button');button.type='button';button.className='primary';button.textContent='立即更新';
+   const later=document.createElement('button');later.type='button';later.className='line-btn';later.textContent='稍后提醒';later.onclick=()=>{banner.hidden=true};
    button.onclick=()=>{
     if(!pending||updating)return;
     updating=true;button.disabled=true;
@@ -31,24 +31,24 @@
      location.replace(url.href);
     }catch(err){updating=false;button.disabled=false;label.textContent='更新前保存失败，请重试（当前学习未中断）';}
    };
-   banner.append(label,button);document.body.append(banner);
+   banner.append(label,button,later);document.getElementById('topik-release-slot').append(banner);
   }
+  banner.hidden=false;
   banner.querySelector('#topik-release-label').textContent='发现新版本 v'+next.version+'（当前 v'+release.version+'）';
  }
  async function check(force=false){
-  if(checking||document.visibilityState==='hidden')return false;
-  if(!force&&Date.now()-lastCheck<15000)return false;
+  if(checking||document.visibilityState==='hidden')return null;
+  if(!force&&Date.now()-lastCheck<30000)return null;
   checking=true;lastCheck=Date.now();
   try{
    const url=new URL('./release.json',location.href);
    url.searchParams.set('t',String(Date.now()));
-   const response=await fetch(url.href,{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
-   if(!response.ok)throw Error('HTTP '+response.status);
-   const remote=await response.json();
+   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
+   let response,remote;try{response=await fetch(url.href,{cache:'no-store',headers:{'Cache-Control':'no-cache'},signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);remote=await response.json()}finally{clearTimeout(timeout)}
    if(!remote||typeof remote.version!=='string'||!/^[a-f0-9]{40}$/.test(remote.buildSha||''))throw Error('invalid release manifest');
    if(remote.buildSha!==release.buildSha){if(release.buildTime&&remote.buildTime&&Date.parse(remote.buildTime)<Date.parse(release.buildTime))return false;showUpdate(remote);return true}
-   return false;
-  }catch(err){if(force)console.warn('[TOPIK] 更新检查未验证',err);return false}
+   pending=null;const banner=document.getElementById(bannerId);if(banner)banner.hidden=true;return false;
+  }catch(err){return null}
   finally{checking=false}
  }
  window.TOPIK_CHECK_UPDATE=()=>check(true);
