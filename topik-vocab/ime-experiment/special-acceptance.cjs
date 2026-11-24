@@ -70,7 +70,21 @@ async function scheduler(p,name){
  const now=1730000000000,words=Array.from({length:120},(_,i)=>[i+1,'词'+i,'word'+i]);
  const seed={progress:{},lifecycle:{},smartDirectionHistory:[],smartHistory:[],dailyGoal:10};
  for(const w of words){const ko=w[1];seed.lifecycle[ko]={stage:'shown',wordState:'REVIEW',seenAt:now-86400000,first:{meaning:true,spell:true}};seed.progress[ko]={};for(const mode of ['meaning','spell'])seed.progress[ko][mode]={last:now-86400000,due:now-1000-(w[0]*2000),memory:{schedulerVersion:3,phase:'review',stability:.5,difficulty:5,lastReview:now-86400000,nextReview:now-1000,successes:1}}}
- function run(engine){const st=JSON.parse(JSON.stringify(seed)),seq=[];for(let i=0;i<100;i++){const t=TOPIK_SMART.select(st,words,{learned:[]},10,st.smartHistory,now+i*1000,st.smartInputDirection||null,'review');if(!t)throw Error('no task '+i);seq.push({wordId:t.word[0],direction:t.mode,priority:t.score,reason:t.reason,type:t.type});st.smartHistory.push(t.word[1]);if(st.smartHistory.length>30)st.smartHistory.shift();st.smartInputDirection=t.mode;st.smartDirectionHistory.push(t.mode);const entry=st.progress[t.word[1]][t.mode];entry.last=now+i*1000;entry.due=now+i*1000+600000}return {seq,st}}
+ function run(engine){
+  const st=JSON.parse(JSON.stringify(seed)),seq=[];let rng=0x12345678;const originalRandom=Math.random;
+  Math.random=()=>{rng=(Math.imul(rng,1664525)+1013904223)>>>0;return rng/4294967296};
+  try{
+   for(let i=0;i<100;i++){
+    const t=TOPIK_SMART.select(st,words,{learned:[]},10,st.smartHistory,now+i*1000,st.smartInputDirection||null,'review');
+    if(!t)throw Error('no task '+i);
+    seq.push({wordId:t.word[0],direction:t.mode,priority:t.score,reason:t.reason,type:t.type});
+    st.smartHistory.push(t.word[1]);if(st.smartHistory.length>30)st.smartHistory.shift();
+    st.smartInputDirection=t.mode;st.smartDirectionHistory.push(t.mode);
+    const entry=st.progress[t.word[1]][t.mode];entry.last=now+i*1000;entry.due=now+i*1000+600000;
+   }
+  }finally{Math.random=originalRandom}
+  return {seq,st}
+ }
  const a=run('legacy'),b=run('simple-ime');return {tasks:a.seq.length,taskSequenceIdentical:JSON.stringify(a.seq)===JSON.stringify(b.seq),directionSequenceIdentical:JSON.stringify(a.seq.map(x=>x.direction))===JSON.stringify(b.seq.map(x=>x.direction)),wordIdSequenceIdentical:JSON.stringify(a.seq.map(x=>x.wordId))===JSON.stringify(b.seq.map(x=>x.wordId)),schedulerStateIdentical:JSON.stringify(a.st)===JSON.stringify(b.st),sample:a.seq.slice(0,4)}});
  for(const k of ['taskSequenceIdentical','directionSequenceIdentical','wordIdSequenceIdentical','schedulerStateIdentical'])assert.equal(result[k],true,name+' '+k);
  console.log(JSON.stringify({browser:name,test:'scheduler-100-equivalence',...result}));
