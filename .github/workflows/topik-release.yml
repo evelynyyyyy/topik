@@ -132,4 +132,4 @@ jobs:
           TARGET_SHA: ${{ needs.test-and-build.outputs.build_sha }}
         run: |
           set -euo pipefail
-          node topik-vocab/scripts/verify-online.cjs "https://evelynyyyyy.github.io/study-abroad/topik-vocab/" "$TARGET_SHA"
+          node topik-vocab/scripts/verify-online.cjs "https://evelynyyyyy.github.io/topik/topik-vocab/" "$TARGET_SHA"
