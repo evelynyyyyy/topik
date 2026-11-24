@@ -20,7 +20,7 @@
     try{window.TOPIK_SAVE_SESSION?.()}catch(_){}
     try{
      const pool=window.TOPIK_ACTIVE_SMART_POOL?.();
-     if(pool)sessionStorage.setItem('topik:resume-after-update',pool);
+     if(pool)(window.TOPIK_SESSION_STORAGE||sessionStorage).setItem('topik:resume-after-update',pool);
     }catch(_){}
     const url=new URL(location.href);url.searchParams.set('release',pending.buildSha);
     try{window.TOPIK_SHARE_SPACE?.prepareUpdate?.(url.href)}catch(_){}
